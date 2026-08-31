@@ -28,11 +28,119 @@ Project layout
 - [data](</D:/Hackathon-Project Nirma/fire noc/AMC-AI-Fire-NOC-Scrutiny-System/data/>) — sample DXF / LAS files and data generators
 - [app.py](</D:/Hackathon-Project Nirma/fire noc/AMC-AI-Fire-NOC-Scrutiny-System/app.py>) — Streamlit dashboard (legacy MVP)
 
+System architecture
+-------------------
+The project follows a layered architecture designed for deterministic rule-based review rather than opaque AI scoring. In presentation terms, it maps to the Digital Fire Compliance Lifecycle System: a Phase A pre-occupancy gatekeeper followed by Phase B post-issuance monitoring and escalation.
+
+```text
++---------------------------------------------------------------------+
+| Phase A: Pre-Occupancy Gatekeeper                                     |
+| - CAD/DXF ingestion                                                  |
+| - Vector validation / layer segregation                              |
+| - Symbol and plan extraction                                         |
+| - NBC / CGDCR rule evaluation                                        |
+| - Form B issuance and immutable audit hash                           |
++-------------------------------------+-------------------------------+
+                                      |
+                                      v
++-------------------------------------+-------------------------------+
+| Frontend / User Interface                                             |
+| - Next.js app                                                         |
+| - Upload blueprint and occupancy inputs                               |
+| - Render geometry and highlight deficiencies                          |
+| - Display compliance decision and seal output                         |
++-------------------------------------+-------------------------------+
+                                      |
+                                      v
++-------------------------------------+-------------------------------+
+| API Layer (FastAPI)                                                   |
+| POST /api/v1/extract                                                  |
+| POST /api/v1/evaluate                                                 |
+| POST /api/v1/seal                                                     |
++-------------------------------------+-------------------------------+
+                                      |
+                                      v
++-------------------------------------+-------------------------------+
+| Processing Core                                                       |
+| 1. CAD parser (ezdxf)                                                 |
+|    - reads .dxf/geometry                                              |
+|    - extracts rooms, staircases, vertices, dimensions                 |
+| 2. Rule engine                                                        |
+|    - applies NBC / local code checks                                  |
+|    - computes decision + deficiencies + recommendations               |
+| 3. Crypto seal                                                        |
+|    - canonical JSON serialization                                     |
+|    - SHA-256 fingerprint                                              |
++-------------------------------------+-------------------------------+
+                                      |
+                                      v
++---------------------------------------------------------------------+
+| Phase B: Continuous Monitoring Grid                                  |
+| - 2-year NOC lifecycle validity tracking                              |
+| - Pre-expiry reminders, escalation ladder, municipal interlocks      |
+| - Dynamic risk prioritization and audit continuity                   |
++---------------------------------------------------------------------+
+```
+
+Architecture in business terms
+------------------------------
+This project is designed around a single end-to-end compliance lifecycle:
+
+1. CAD ingestion and vector validation
+   - Accept only vector plans and reject raster-based or ambiguous inputs.
+   - Segregate building layers such as rooms, stairs, exits, and fire equipment.
+2. AI-assisted plan review
+   - Extract plan metadata and geometric features from the blueprint.
+   - Evaluate egress, staircase width, refuge area, fire access, and occupancy factors.
+3. Legal rule engine
+   - Map extracted values into a deterministic legal ontology tied to NBC 2016, Gujarat Fire Act, and municipal rules.
+   - Produce a pass/fail decision with measurable deficiencies.
+4. Immutable audit trail
+   - Create a SHA-256 seal for the submitted file and compliance result.
+   - Protect the document against tampering and provide court-ready evidence.
+5. Lifecycle governance
+   - Extend beyond the approval stage into post-issuance monitoring, expiry notices, worklist prioritization and renewal enforcement.
+
+This aligns with the deck's core message: a unified AI-powered pre-occupancy scrutiny and continuous post-issuance fire NOC lifecycle management framework.
+
 Key concepts
 ------------
 - DXF parsing: Uses ezdxf to extract entities from explicit DXF layers such as `ROOMS` and `STAIRS`. The parser returns rooms, staircases, vertices and widths for frontend rendering.
 - Deterministic rule engine: Encodes selectable checks (e.g., minimum stair width by occupancy, room area thresholds, high-rise refuge requirements) and returns decision, deficiencies and recommendations.
 - Cryptographic sealing: Serializes filename + metrics + evaluation into a canonical JSON string and computes SHA-256 to produce a tamper-evident fingerprint with an ISO-8601 timestamp.
+
+Typical usage workflow
+----------------------
+1. User uploads a CAD blueprint (.dxf) from the frontend or via API.
+2. The backend `/extract` endpoint parses the file and returns geometric metrics.
+3. The user supplies occupancy type and building height.
+4. The backend `/evaluate` endpoint checks metric thresholds against the rule engine.
+5. The result includes:
+   - `decision` — APPROVED or REJECTED
+   - `deficiencies` — code gaps or fail conditions
+   - `recommendations` — mitigation actions
+   - `deficiency_entity_ids` — entities to highlight on the blueprint
+6. The backend `/seal` endpoint creates the WORM hash for audit integrity.
+7. The frontend visuals the blueprint, highlights non-compliant objects, and displays the compliance report.
+
+End-user workflow (recommended)
+--------------------------------
+- Open the frontend at `http://localhost:3000`
+- Upload a sample DXF or project plan
+- Select occupancy type (Commercial, Residential, Institutional, Industrial)
+- Enter or adjust building height
+- Review the extracted rooms and staircase widths
+- Inspect highlighted deficiencies
+- Download or record the cryptographic seal for audit purposes
+
+Developer workflow
+------------------
+- Start the backend service
+- Run the API smoke test
+- Inspect `/docs` for request/response schemas
+- Extend rule checks in `backend/core/rule_engine.py`
+- Add new parsing logic in `backend/core/cad_parser.py`
+- Connect new UI interactions in the Next.js frontend
 
 Quickstart — Backend (FastAPI)
 -----------------------------
