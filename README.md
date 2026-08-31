@@ -7,8 +7,6 @@ Automated CAD blueprint verification and deterministic compliance checking for A
 - Produces a WORM (Write Once Read Many) SHA-256 cryptographic seal for audit trails
 - Provides both a programmatic FastAPI backend and a Next.js frontend prototype
 
-This README is written by an AI assistant using the Copilot CLI runtime in VS Code after scanning the project.
-
 Status
 ------
 Prototype — functional core modules and example UI. Not production hardened. Use for evaluation and further development.
@@ -101,7 +99,6 @@ This project is designed around a single end-to-end compliance lifecycle:
 5. Lifecycle governance
    - Extend beyond the approval stage into post-issuance monitoring, expiry notices, worklist prioritization and renewal enforcement.
 
-This aligns with the deck's core message: a unified AI-powered pre-occupancy scrutiny and continuous post-issuance fire NOC lifecycle management framework.
 
 Key concepts
 ------------
